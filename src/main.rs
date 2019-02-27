@@ -150,6 +150,8 @@ impl Board {
 
 }
 
+
+
 #[entry]
 fn main() -> ! {
     let mut board = Board::new();
@@ -160,8 +162,8 @@ fn main() -> ! {
 
     loop {
         match board.read_user_button() {
-            ButtonState::Open => i = 10,
-            ButtonState::Closed => i = 20,
+            ButtonState::Open => i = i.wrapping_add(1),
+            ButtonState::Closed => i = i.wrapping_sub(1),
         };
 
         board.display_number(i).unwrap();
