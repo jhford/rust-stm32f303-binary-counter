@@ -14,7 +14,7 @@ extern crate stm32f3;
 use stm32f3::stm32f303;
 
 #[derive(Debug)]
-enum LEDState {
+pub enum LEDState {
     Off,
     On,
 }
@@ -35,10 +35,10 @@ impl Board {
         let rcc = &self.peripherals.RCC;
         let gpioe = &self.peripherals.GPIOE;
  
-        hprintln!("Enabling rcc.ahbenr");
+        hprintln!("Enabling rcc.ahbenr").unwrap();
         rcc.ahbenr.modify(|_, w| w.iopeen().set_bit());
 
-        hprintln!("Configuring modes as outputs");
+        hprintln!("Configuring modes as outputs").unwrap();
         gpioe.moder.modify(|_, w| {
             w.moder8().output();
             w.moder9().output();
@@ -50,7 +50,7 @@ impl Board {
             w.moder15().output()
         });
 
-        hprintln!("Finished initializing");
+        hprintln!("Finished initializing").unwrap();
     }
 
     fn turn_on_led(&mut self, num: u8) -> Result<(), ()> {
@@ -100,7 +100,7 @@ impl Board {
         return result;
     }
 
-    fn change_led(&mut self, num: u8, state: LEDState) -> Result<(), ()> {
+    pub fn change_led(&mut self, num: u8, state: LEDState) -> Result<(), ()> {
         match state {
             LEDState::On => self.turn_on_led(num),
             LEDState::Off => self.turn_off_led(num),
@@ -108,12 +108,12 @@ impl Board {
     }
 
     fn display_number(&mut self, num: u8) -> Result<(), ()> {
-        hprintln!("Showing {}", num);
+        hprintln!("Showing {}", num).unwrap();
         for led in 0..8 {
             match (1 << led) & num == 0 {
                 true => self.turn_off_led(led),
                 false => self.turn_on_led(led),
-            };
+            }?
         }
         
         Ok(())
@@ -130,7 +130,7 @@ fn main() -> ! {
     let mut i: u8 = 0;
 
     loop {
-        board.display_number(i);
+        board.display_number(i).unwrap();
         i = i + 1;
     }
 }
