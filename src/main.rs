@@ -19,6 +19,12 @@ pub enum LEDState {
     On,
 }
 
+#[derive(Debug)]
+pub enum ButtonState {
+    Open,
+    Closed,
+}
+
 pub struct Board {
     peripherals: stm32f303::Peripherals
 }
@@ -34,9 +40,14 @@ impl Board {
 
         let rcc = &self.peripherals.RCC;
         let gpioe = &self.peripherals.GPIOE;
+        let gpioa = &self.peripherals.GPIOA;
  
         hprintln!("Enabling rcc.ahbenr").unwrap();
-        rcc.ahbenr.modify(|_, w| w.iopeen().set_bit());
+        rcc.ahbenr.modify(|_, w| {
+            w.iopeen().set_bit();
+            w.iopaen().set_bit();
+            w
+        });
 
         hprintln!("Configuring modes as outputs").unwrap();
         gpioe.moder.modify(|_, w| {
@@ -50,7 +61,25 @@ impl Board {
             w.moder15().output()
         });
 
+        gpioa.moder.modify(|_, w| {
+            w.moder0().input();
+            w
+        });
+
+        gpioa.pupdr.modify(|_, w| {
+            w.pupdr0().floating();
+            w
+        });
+
         hprintln!("Finished initializing").unwrap();
+    }
+
+    fn read_user_button(&self) -> ButtonState {
+        //hprintln!("{:?}", self.peripherals.GPIOA.idr.read().bits());
+        match self.peripherals.GPIOA.idr.read().idr0().is_high() {
+            true => ButtonState::Closed,
+            false => ButtonState::Open,
+        }
     }
 
     fn turn_on_led(&mut self, num: u8) -> Result<(), ()> {
@@ -130,7 +159,11 @@ fn main() -> ! {
     let mut i: u8 = 0;
 
     loop {
+        match board.read_user_button() {
+            ButtonState::Open => i = 10,
+            ButtonState::Closed => i = 20,
+        };
+
         board.display_number(i).unwrap();
-        i = i + 1;
     }
 }
