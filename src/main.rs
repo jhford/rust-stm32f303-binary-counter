@@ -55,7 +55,7 @@ impl Board {
 
     fn turnOnLed(&mut self, num: u8) -> Result<(), ()> {
         let mut result = Ok(());
-        hprintln!("Turning on LED {}", num);
+        //hprintln!("Turning on LED {}", num);
         self.peripherals.GPIOE.odr.modify(|_, w| {
             match num {
                 0 => w.odr8().set_bit(),
@@ -79,7 +79,7 @@ impl Board {
 
     fn turnOffLed(&mut self, num: u8) -> Result<(), ()> {
         let mut result = Ok(());
-        hprintln!("Turning off LED {}", num);
+        //hprintln!("Turning off LED {}", num);
         self.peripherals.GPIOE.odr.modify(|_, w| {
             match num {
                 0 => w.odr8().clear_bit(),
@@ -102,9 +102,21 @@ impl Board {
 
     fn changeLed(&mut self, num: u8, state: LEDState) -> Result<(), ()> {
         match state {
-            On => self.turnOnLed(num),
-            Off => self.turnOffLed(num),
+            LEDState::On => self.turnOnLed(num),
+            LEDState::Off => self.turnOffLed(num),
         }
+    }
+
+    fn displayNumber(&mut self, num: u8) -> Result<(), ()> {
+        hprintln!("Showing {}", num);
+        for led in 0..8 {
+            match (1 << led) & num == 0 {
+                true => self.turnOffLed(led),
+                false => self.turnOnLed(led),
+            };
+        }
+        
+        Ok(())
     }
 
 }
@@ -115,8 +127,12 @@ fn main() -> ! {
 
     board.init();
 
+    let mut i: u8;
+
+    i = 120;
+
     loop {
-        board.turnOnLed(0);
-        board.turnOffLed(0);
+        board.displayNumber(i);    
+        i = i + 1;
     }
 }
