@@ -19,7 +19,7 @@ enum LEDState {
     On,
 }
 
-struct Board {
+pub struct Board {
     peripherals: stm32f303::Peripherals
 }
 
@@ -48,12 +48,12 @@ impl Board {
             w.moder13().output();
             w.moder14().output();
             w.moder15().output()
-        });       
+        });
 
         hprintln!("Finished initializing");
     }
 
-    fn turnOnLed(&mut self, num: u8) -> Result<(), ()> {
+    fn turn_on_led(&mut self, num: u8) -> Result<(), ()> {
         let mut result = Ok(());
         //hprintln!("Turning on LED {}", num);
         self.peripherals.GPIOE.odr.modify(|_, w| {
@@ -77,7 +77,7 @@ impl Board {
     }
 
 
-    fn turnOffLed(&mut self, num: u8) -> Result<(), ()> {
+    fn turn_off_led(&mut self, num: u8) -> Result<(), ()> {
         let mut result = Ok(());
         //hprintln!("Turning off LED {}", num);
         self.peripherals.GPIOE.odr.modify(|_, w| {
@@ -100,19 +100,19 @@ impl Board {
         return result;
     }
 
-    fn changeLed(&mut self, num: u8, state: LEDState) -> Result<(), ()> {
+    fn change_led(&mut self, num: u8, state: LEDState) -> Result<(), ()> {
         match state {
-            LEDState::On => self.turnOnLed(num),
-            LEDState::Off => self.turnOffLed(num),
+            LEDState::On => self.turn_on_led(num),
+            LEDState::Off => self.turn_off_led(num),
         }
     }
 
-    fn displayNumber(&mut self, num: u8) -> Result<(), ()> {
+    fn display_number(&mut self, num: u8) -> Result<(), ()> {
         hprintln!("Showing {}", num);
         for led in 0..8 {
             match (1 << led) & num == 0 {
-                true => self.turnOffLed(led),
-                false => self.turnOnLed(led),
+                true => self.turn_off_led(led),
+                false => self.turn_on_led(led),
             };
         }
         
@@ -127,12 +127,10 @@ fn main() -> ! {
 
     board.init();
 
-    let mut i: u8;
-
-    i = 120;
+    let mut i: u8 = 0;
 
     loop {
-        board.displayNumber(i);    
+        board.display_number(i);
         i = i + 1;
     }
 }
