@@ -53,9 +53,10 @@ impl Board {
         hprintln!("Finished initializing");
     }
 
-    fn change(&mut self, num: u8, state: LEDState) {
-        hprintln!("Changing LED {} to {:?}", num, state);
-        self.peripherals.GPIOE.odr.write(|w| {
+    fn change(&mut self, num: u8, state: LEDState) -> Result<(), ()> {
+        let mut result = Ok(());
+        //hprintln!("Changing LED {} to {:?}", num, state);
+        self.peripherals.GPIOE.odr.modify(|_, w| {
             match num {
                 0 => w.odr8().set_bit(),
                 1 => w.odr9().set_bit(),
@@ -65,9 +66,14 @@ impl Board {
                 5 => w.odr13().set_bit(),
                 6 => w.odr14().set_bit(),
                 7 => w.odr15().set_bit(),
-                _ => w.odr10().set_bit(),
+                _ => {
+                    result = Err(());
+                    w
+                }
             }
         });
+
+        return result;
     }
 
     fn ledOff(&mut self) {
@@ -92,16 +98,14 @@ fn main() -> ! {
 
     board.init();
 
-    board.change(0, LEDState::On);
-    board.change(1, LEDState::On);
-    board.change(2, LEDState::On);
-    board.change(3, LEDState::On);
-    board.change(4, LEDState::On);
-    board.change(5, LEDState::On);
-    board.change(6, LEDState::On);
-    board.change(7, LEDState::On);
-
     loop {
-        // your code goes here
+        board.change(0, LEDState::On);
+        board.change(1, LEDState::On);
+        board.change(2, LEDState::On);
+        board.change(3, LEDState::On);
+        board.change(4, LEDState::On);
+        board.change(5, LEDState::On);
+        board.change(6, LEDState::On);
+        board.change(7, LEDState::On);
     }
 }
