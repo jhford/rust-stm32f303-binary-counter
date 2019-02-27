@@ -53,9 +53,9 @@ impl Board {
         hprintln!("Finished initializing");
     }
 
-    fn change(&mut self, num: u8, state: LEDState) -> Result<(), ()> {
+    fn turnOnLed(&mut self, num: u8) -> Result<(), ()> {
         let mut result = Ok(());
-        //hprintln!("Changing LED {} to {:?}", num, state);
+        hprintln!("Turning on LED {}", num);
         self.peripherals.GPIOE.odr.modify(|_, w| {
             match num {
                 0 => w.odr8().set_bit(),
@@ -76,20 +76,37 @@ impl Board {
         return result;
     }
 
-    fn ledOff(&mut self) {
-        self.peripherals.GPIOE.odr.write(|w| {
-            w.odr8().set_bit()
+
+    fn turnOffLed(&mut self, num: u8) -> Result<(), ()> {
+        let mut result = Ok(());
+        hprintln!("Turning off LED {}", num);
+        self.peripherals.GPIOE.odr.modify(|_, w| {
+            match num {
+                0 => w.odr8().clear_bit(),
+                1 => w.odr9().clear_bit(),
+                2 => w.odr10().clear_bit(),
+                3 => w.odr11().clear_bit(),
+                4 => w.odr12().clear_bit(),
+                5 => w.odr13().clear_bit(),
+                6 => w.odr14().clear_bit(),
+                7 => w.odr15().clear_bit(),
+                _ => {
+                    result = Err(());
+                    w
+                }
+            }
         });
+
+        return result;
     }
-}
 
-fn init () -> (stm32f3::stm32f303::RCC, stm32f3::stm32f303::GPIOE) {
-    let peripherals = stm32f303::Peripherals::take().unwrap();
+    fn changeLed(&mut self, num: u8, state: LEDState) -> Result<(), ()> {
+        match state {
+            On => self.turnOnLed(num),
+            Off => self.turnOffLed(num),
+        }
+    }
 
-    let rcc = peripherals.RCC;
-    let gpioe = peripherals.GPIOE;
-
-    return (rcc, gpioe);
 }
 
 #[entry]
@@ -99,13 +116,7 @@ fn main() -> ! {
     board.init();
 
     loop {
-        board.change(0, LEDState::On);
-        board.change(1, LEDState::On);
-        board.change(2, LEDState::On);
-        board.change(3, LEDState::On);
-        board.change(4, LEDState::On);
-        board.change(5, LEDState::On);
-        board.change(6, LEDState::On);
-        board.change(7, LEDState::On);
+        board.turnOnLed(0);
+        board.turnOffLed(0);
     }
 }
